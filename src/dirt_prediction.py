@@ -17,7 +17,6 @@ dirt_predictor_local_path = f"../models/{model_version}"
 def get_dirt_predictor():
     global dirt_predictor
     if dirt_predictor is None:
-        print("Here")
         if not os.path.exists(dirt_predictor_local_path):
             dirt_predictor = tf.keras.models.load_model(dirt_predictor_path)
             dirt_predictor.save(dirt_predictor_local_path, save_format="tf")
@@ -26,8 +25,7 @@ def get_dirt_predictor():
     return dirt_predictor
 
 
-def read_image(file_path):
-    img = np.asarray(Image.open(file_path))
+def format_image(img):
     return (
         cv.resize(img, dsize=(IMG_DIMENSION_H, IMG_DIMENSION_W)).astype(np.float32)
         / 255.0
@@ -37,11 +35,8 @@ def read_image(file_path):
 def predict_dirt(path_or_img):
     model = get_dirt_predictor()
     if type(path_or_img) == str:
-        image = read_image(path_or_img)
-    elif type(path_or_img) == np.ndarray:
-        image = format_image(path_or_img)
-    else:
-        raise ValueError(f"The type {type(path_or_img)} is not currently supported")
-    probabilities = model.predict(np.array([image]))
+        path_or_img = np.asarray(Image.open(path_or_img))
+    img = format_image(path_or_img)
+    probabilities = model.predict(np.array([img]))
     predictions = probabilities > THRESHOLD
     return predictions[0]
