@@ -27,7 +27,7 @@ def get_dirt_predictor():
 
 def format_image(img):
     return (
-        cv.resize(img, dsize=(IMG_DIMENSION_H, IMG_DIMENSION_W)).astype(np.float32)
+        cv.resize(img, dsize=(IMG_DIMENSION_W, IMG_DIMENSION_H)).astype(np.float32)
         / 255.0
     )
 
