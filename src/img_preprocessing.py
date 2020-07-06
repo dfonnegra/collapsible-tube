@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+import settings
 from utils import LITTLE_CIRCLE_SCALE
 
 
@@ -104,9 +105,31 @@ def get_center_circle(img):
         cvt_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cvt_img = cv2.GaussianBlur(cvt_img, (11, 11), sigmaX=2, sigmaY=2)
     circles = cv2.HoughCircles(cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=40)
-    radius_list = circles[0, :, 2]
-    min_radius = np.min(radius_list)
-    main_radius = min_radius
-    main_circle = circles[0, np.where(radius_list == main_radius)[0][0], :]
-    x, y, rad = main_circle
-    return x, y, rad
+    main_circle = circles[0][0]
+    min_dist = (circles[0, 0, 0] - settings.AVERAGE_CENTER[0]) ** 2 + (
+        circles[0, 0, 1] - settings.AVERAGE_CENTER[1]
+    ) ** 2
+    for x, y, rad in circles[0, 1:, :]:
+        curr_dist = (x - settings.AVERAGE_CENTER[0]) ** 2 + (
+            y - settings.AVERAGE_CENTER[1]
+        ) ** 2
+        if curr_dist < min_dist:
+            min_dist = curr_dist
+            main_circle = x, y, rad
+    return main_circle[0], main_circle[1], main_circle[2]
+
+
+def mask_circle_and_wrap_polar(img):
+    try:
+        x, y, rad = get_center_circle(img)
+        if abs(rad - settings.SMALL_RADIUS_SIZE) < abs(rad - settings.MED_RADIUS_SIZE):
+            rad = settings.BIG_RADIUS_SIZE / settings.SMALL_RADIUS_SIZE * rad
+        elif abs(rad - settings.MED_RADIUS_SIZE) < abs(rad - settings.BIG_RADIUS_SIZE):
+            rad = settings.BIG_RADIUS_SIZE / settings.MED_RADIUS_SIZE * rad
+    except TypeError:
+        x, y = settings.AVERAGE_CENTER
+        rad = settings.BIG_RADIUS_SIZE
+    dwidth = min(settings.IMG_DIMENSION_W, settings.IMG_DIMENSION_H)
+    return cv2.warpPolar(
+        img, (dwidth, dwidth), (x, y), int(0.9 * rad), cv2.WARP_POLAR_LINEAR
+    )
