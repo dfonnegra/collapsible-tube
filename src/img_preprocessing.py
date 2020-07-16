@@ -99,24 +99,74 @@ def dirt_img(img):
     return generate_noise(img)
 
 
-def get_center_circle(img):
+def get_center_circle(img, **hough_params):
     cvt_img = img
-    if len(cvt_img.shape) == 3:
+    if len(img.shape) == 3:
         cvt_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cvt_img = cv2.GaussianBlur(cvt_img, (11, 11), sigmaX=2, sigmaY=2)
-    circles = cv2.HoughCircles(cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=40)
-    main_circle = circles[0][0]
-    min_dist = (circles[0, 0, 0] - settings.AVERAGE_CENTER[0]) ** 2 + (
-        circles[0, 0, 1] - settings.AVERAGE_CENTER[1]
-    ) ** 2
-    for x, y, rad in circles[0, 1:, :]:
-        curr_dist = (x - settings.AVERAGE_CENTER[0]) ** 2 + (
-            y - settings.AVERAGE_CENTER[1]
-        ) ** 2
-        if curr_dist < min_dist:
-            min_dist = curr_dist
-            main_circle = x, y, rad
-    return main_circle[0], main_circle[1], main_circle[2]
+    cvt_img = 255 - cvt_img
+    hough_params.setdefault("param1", settings.PARAM1_HOUGH)
+    hough_params.setdefault("param2", settings.PARAM2_HOUGH)
+    circles = cv2.HoughCircles(
+        cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=50, maxRadius=65, **hough_params
+    )
+    # cv2.circle(
+    #     img, (circles[0, 0, 0], circles[0, 0, 1]), circles[0, 0, 2], (0, 0, 255), 5
+    # )
+    return circles[0][0]
+
+
+def translate_image(img, dx, dy):
+    new_img = np.zeros(img.shape) + img.mean(axis=(0, 1))
+
+    if dx > 0 and dy > 0:
+        new_img[dy:, dx:] = img[:-dy, :-dx]
+    elif dx > 0 and dy < 0:
+        new_img[:dy, dx:] = img[-dy:, :-dx]
+    elif dx < 0 and dy > 0:
+        new_img[dy:, :dx] = img[:-dy, -dx:]
+    elif dx < 0 and dy < 0:
+        new_img[:dy, :dx] = img[-dy:, -dx:]
+    elif dx == 0 and dy > 0:
+        new_img[dy:, :] = img[:-dy, :]
+    elif dx == 0 and dy < 0:
+        new_img[:dy, :] = img[-dy:, :]
+    elif dx > 0 and dy == 0:
+        new_img[:, dx:] = img[:, :-dx]
+    elif dx < 0 and dy == 0:
+        new_img[:, :dx] = img[:, -dx:]
+    else:
+        new_img = img
+    return new_img
+
+
+def mask_circle(img):
+    try:
+        x, y, rad = get_center_circle(img)
+        if abs(rad - settings.SMALL_RADIUS_SIZE) < abs(rad - settings.MED_RADIUS_SIZE):
+            rad = settings.BIG_RADIUS_SIZE * settings.SMALL_RADIUS_SIZE / rad
+        elif abs(rad - settings.MED_RADIUS_SIZE) < abs(rad - settings.BIG_RADIUS_SIZE):
+            rad = settings.BIG_RADIUS_SIZE * settings.MED_RADIUS_SIZE / rad
+    except TypeError:
+        x, y = settings.AVERAGE_CENTER
+        rad = settings.BIG_RADIUS_SIZE
+    x, y, rad = int(x), int(y), int(rad)
+    dim = min(settings.IMG_DIMENSION_W, settings.IMG_DIMENSION_H)
+    img = translate_image(img, img.shape[1] // 2 - x, img.shape[0] // 2 - y)
+    y_dim = min(img.shape[0] // 2 + rad, img.shape[0]) - max(img.shape[0] // 2 - rad, 0)
+    x_dim = min(img.shape[1] // 2 + rad, img.shape[1]) - max(img.shape[1] // 2 - rad, 0)
+    filter_dim = min(x_dim, y_dim)
+    img = img[
+        img.shape[0] // 2 - filter_dim // 2 : img.shape[0] // 2 + filter_dim // 2,
+        img.shape[1] // 2 - filter_dim // 2 : img.shape[1] // 2 + filter_dim // 2,
+    ]
+    circle_mask = np.zeros(img.shape[:2], np.uint8)
+    cv2.circle(circle_mask, (img.shape[1] // 2, img.shape[0] // 2), rad, 255, -1)
+    img_mean = img.mean(axis=(0, 1))
+    img = cv2.bitwise_and(img, img, mask=circle_mask)
+    background = cv2.bitwise_or(img, img_mean, mask=cv2.bitwise_not(circle_mask))
+    img = cv2.bitwise_or(img, background)
+    return cv2.resize(img, dsize=(dim, dim))
 
 
 def mask_circle_and_wrap_polar(img):
