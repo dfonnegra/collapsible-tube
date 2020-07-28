@@ -19,6 +19,7 @@ isort = "*"
 scikit-learn = "*"
 keras = "*"
 seaborn = "*"
+optuna = "*"
 
 [requires]
 python_version = "3.6"
