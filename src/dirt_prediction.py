@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
+from img_preprocessing import mask_circle
+
 THRESHOLD = 0.5
 IMG_DIMENSION_W = 512  # No modificar, la red neuronal se entreno con estos valores
 IMG_DIMENSION_H = 512  # No modificar, la red neuronal se entreno con estos valores
@@ -27,21 +29,21 @@ def get_dirt_predictor():
 
 
 def format_image(img):
-    return (
-        cv.resize(img, dsize=(IMG_DIMENSION_W, IMG_DIMENSION_H)).astype(np.float32)
-        / 255.0
-    )
+    return img.astype(np.float32) / 255.0
 
 
 def predict_dirt(path_or_img):
     autoencoder, classifier, scaler = get_dirt_predictor()
     if type(path_or_img) == str:
         path_or_img = np.asarray(Image.open(path_or_img))
-    img_real = format_image(path_or_img)
+    img = cv.cvtColor(path_or_img, cv.COLOR_RGB2BGR)
+    img = mask_circle(img)
+    img = cv.cvtColor(img.astype(np.uint8), cv.COLOR_BGR2RGB)
+    img_real = format_image(img)
     img_pred = autoencoder.predict(np.array([img_real]))
     abs_diff = np.abs(img_real - img_pred)
     mse_vals = np.var(abs_diff)
     mean_vals = np.mean(abs_diff)
     count_vals = (abs_diff > 40 / 255).sum()
     X = np.array([[mse_vals, mean_vals, count_vals]])
-    return classifier.predict(scaler.transform(X))[0]
+    return classifier.predict_proba(scaler.transform(X))[0][1]
