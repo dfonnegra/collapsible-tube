@@ -7,7 +7,12 @@ import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from img_preprocessing import dirt_img, get_center_circle, mask_circle
+from img_preprocessing import (
+    dirt_img,
+    get_center_circle,
+    mask_circle,
+    mask_circle_and_wrap_polar,
+)
 
 
 def _aux_generate_sets(filenames, train_size, dev_size):
@@ -37,7 +42,9 @@ def generate_train_dev_test_sets(train_size=0.8, dev_size=0.1, with_preprocess=F
                 if not with_preprocess:
                     shutil.copyfile(src_path, dst_path)
                 else:
-                    cv2.imwrite(dst_path, mask_circle(cv2.imread(src_path)))
+                    cv2.imwrite(
+                        dst_path, mask_circle_and_wrap_polar(cv2.imread(src_path))
+                    )
 
 
 def generate_train_dev_test_dirt_images():
@@ -122,7 +129,7 @@ def compute_hough_circles_params():
 
 
 if __name__ == "__main__":
-    # generate_train_dev_test_sets(with_preprocess=True)
+    generate_train_dev_test_sets(with_preprocess=True)
     # compute_hough_circles_params()
     # compute_dataset_stats()
-    generate_train_dev_test_dirt_images()
+    # generate_train_dev_test_dirt_images()

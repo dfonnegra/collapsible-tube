@@ -150,8 +150,8 @@ def mask_circle(img):
     except TypeError:
         x, y = settings.AVERAGE_CENTER
         rad = settings.BIG_RADIUS_SIZE
-    x, y, rad = int(x), int(y), int(rad)
-    dim = min(settings.IMG_DIMENSION_W, settings.IMG_DIMENSION_H)
+    x, y, rad = int(x), int(y), int(settings.CIRCLE_PERC_FILTER * rad)
+    dim = settings.OUTPUT_IMG_DIMENSION
     img = translate_image(img, img.shape[1] // 2 - x, img.shape[0] // 2 - y)
     y_dim = min(img.shape[0] // 2 + rad, img.shape[0]) - max(img.shape[0] // 2 - rad, 0)
     x_dim = min(img.shape[1] // 2 + rad, img.shape[1]) - max(img.shape[1] // 2 - rad, 0)
@@ -179,7 +179,11 @@ def mask_circle_and_wrap_polar(img):
     except TypeError:
         x, y = settings.AVERAGE_CENTER
         rad = settings.BIG_RADIUS_SIZE
-    dwidth = min(settings.IMG_DIMENSION_W, settings.IMG_DIMENSION_H)
+    dim = settings.OUTPUT_IMG_DIMENSION
     return cv2.warpPolar(
-        img, (dwidth, dwidth), (x, y), int(0.9 * rad), cv2.WARP_POLAR_LINEAR
+        img,
+        (dim, dim),
+        (x, y),
+        int(settings.CIRCLE_PERC_FILTER * rad),
+        cv2.WARP_POLAR_LINEAR,
     )
