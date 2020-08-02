@@ -43,9 +43,12 @@ def generate_train_dev_test_sets(train_size=0.8, dev_size=0.1, with_preprocess=F
                 if not with_preprocess:
                     shutil.copyfile(src_path, dst_path)
                 else:
-                    cv2.imwrite(
-                        dst_path, mask_circle_and_wrap_polar(cv2.imread(src_path))
+                    img = np.asarray(Image.open(src_path))
+                    img = cv2.resize(
+                        cv2.cvtColor(img, cv2.COLOR_RGB2BGR), dsize=(640, 480)
                     )
+                    img = mask_circle(img)
+                    cv2.imwrite(dst_path, img)
 
 
 def generate_train_dev_test_dirt_images():
@@ -97,18 +100,21 @@ def compute_error(params):
     paths = [
         f"../img/Limpias/{path}"
         for path in os.listdir("../img/Limpias")
-        if np.random.choice([True, False], p=[0.10, 0.9])
+        if np.random.choice([True, False], p=[0.5, 0.5])
     ]
 
     for path in paths:
         try:
             img = cv2.cvtColor(np.asarray(Image.open(path)), cv2.COLOR_RGB2BGR)
+            img = cv2.resize(img, dsize=(640, 480))
             circles.append(get_center_circle(img, **params))
         except TypeError:
             pass
     error = (
         np.std(circles, axis=0).sum() * (len(paths) / (len(circles) + 0.000001)) ** 2
     )
+    if len(circles) < 5:
+        error = 1e9
     print(
         f"Error for param1: {params['param1']} and param2: {params['param2']} is: {error}"
     )
@@ -131,7 +137,7 @@ def compute_hough_circles_params():
 
 
 if __name__ == "__main__":
-    # generate_train_dev_test_sets(with_preprocess=True)
-    compute_hough_circles_params()
+    generate_train_dev_test_sets(with_preprocess=True)
+    # compute_hough_circles_params()
     # compute_dataset_stats()
     # generate_train_dev_test_dirt_images()
