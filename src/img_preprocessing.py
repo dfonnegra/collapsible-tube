@@ -111,13 +111,15 @@ def get_center_circle(img, **hough_params):
         cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=45, maxRadius=55, **hough_params
     )
     # cv2.circle(
-    #    img, (circles[0, 0, 0], circles[0, 0, 1]), circles[0, 0, 2], (0, 0, 255), 5
+    #     img, (circles[0, 0, 0], circles[0, 0, 1]), circles[0, 0, 2], (0, 0, 255), 5
     # )
     return circles[0][0]
 
 
 def translate_image(img, dx, dy):
-    new_img = np.zeros(img.shape) + img.mean(axis=(0, 1))
+    new_img = np.zeros(img.shape, dtype=np.uint8) + img.mean(axis=(0, 1)).astype(
+        np.uint8
+    )
 
     if dx > 0 and dy > 0:
         new_img[dy:, dx:] = img[:-dy, :-dx]
@@ -160,7 +162,7 @@ def mask_circle(img):
         img.shape[0] // 2 - filter_dim // 2 : img.shape[0] // 2 + filter_dim // 2,
         img.shape[1] // 2 - filter_dim // 2 : img.shape[1] // 2 + filter_dim // 2,
     ]
-    circle_mask = np.zeros(img.shape[:2], np.uint8)
+    circle_mask = np.zeros(img.shape[:2], dtype=np.uint8)
     cv2.circle(circle_mask, (img.shape[1] // 2, img.shape[0] // 2), rad, 255, -1)
     img_mean = img.mean(axis=(0, 1))
     img = cv2.bitwise_and(img, img, mask=circle_mask)

@@ -5,6 +5,7 @@ import time
 
 import cv2
 import numpy as np
+from PIL import Image
 from sklearn.model_selection import train_test_split
 
 from img_preprocessing import (
@@ -101,7 +102,8 @@ def compute_error(params):
 
     for path in paths:
         try:
-            circles.append(get_center_circle(cv2.imread(path), **params))
+            img = cv2.cvtColor(np.asarray(Image.open(path)), cv2.COLOR_RGB2BGR)
+            circles.append(get_center_circle(img, **params))
         except TypeError:
             pass
     error = (
@@ -129,7 +131,7 @@ def compute_hough_circles_params():
 
 
 if __name__ == "__main__":
-    generate_train_dev_test_sets(with_preprocess=True)
-    # compute_hough_circles_params()
+    # generate_train_dev_test_sets(with_preprocess=True)
+    compute_hough_circles_params()
     # compute_dataset_stats()
     # generate_train_dev_test_dirt_images()

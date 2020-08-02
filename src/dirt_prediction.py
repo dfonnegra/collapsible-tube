@@ -38,7 +38,7 @@ def predict_dirt(path_or_img):
         path_or_img = np.asarray(Image.open(path_or_img))
     img = cv.resize(cv.cvtColor(path_or_img, cv.COLOR_RGB2BGR), dsize=(640, 480))
     img = mask_circle(img)
-    img = cv.cvtColor(img.astype(np.uint8), cv.COLOR_BGR2RGB)
+    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     img_real = format_image(img)
     img_pred = autoencoder.predict(np.array([img_real]))
     abs_diff = np.abs(img_real - img_pred)
