@@ -103,12 +103,19 @@ def get_center_circle(img, **hough_params):
     cvt_img = img
     if len(img.shape) == 3:
         cvt_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    cvt_img = cv2.GaussianBlur(cvt_img, (11, 11), sigmaX=2, sigmaY=2)
-    cvt_img = 255 - cvt_img
+    sigma = 2 if "sigma" not in hough_params else hough_params.pop("sigma")
+    kernel_size = (
+        11 if "kernel_size" not in hough_params else hough_params.pop("kernel_size")
+    )
+    cvt_img = cv2.GaussianBlur(
+        cvt_img, (kernel_size, kernel_size), sigmaX=sigma, sigmaY=sigma
+    )
+    if hough_params.get("invert", True):
+        cvt_img = 255 - cvt_img
     hough_params.setdefault("param1", settings.PARAM1_HOUGH)
     hough_params.setdefault("param2", settings.PARAM2_HOUGH)
     circles = cv2.HoughCircles(
-        cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=48, maxRadius=52, **hough_params
+        cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=52, maxRadius=60, **hough_params
     )
     # cv2.circle(
     #     img, (circles[0, 0, 0], circles[0, 0, 1]), circles[0, 0, 2], (0, 0, 255), 5
@@ -146,9 +153,9 @@ def mask_circle(img):
     try:
         x, y, rad = get_center_circle(img)
         if abs(rad - settings.SMALL_RADIUS_SIZE) < abs(rad - settings.MED_RADIUS_SIZE):
-            rad = settings.BIG_RADIUS_SIZE * settings.SMALL_RADIUS_SIZE / rad
+            rad = settings.BIG_RADIUS_SIZE * rad / settings.SMALL_RADIUS_SIZE
         elif abs(rad - settings.MED_RADIUS_SIZE) < abs(rad - settings.BIG_RADIUS_SIZE):
-            rad = settings.BIG_RADIUS_SIZE * settings.MED_RADIUS_SIZE / rad
+            rad = settings.BIG_RADIUS_SIZE * rad / settings.MED_RADIUS_SIZE
     except TypeError:
         x, y = settings.AVERAGE_CENTER
         rad = settings.BIG_RADIUS_SIZE

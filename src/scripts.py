@@ -100,7 +100,7 @@ def compute_error(params):
     paths = [
         f"../img/Limpias/{path}"
         for path in os.listdir("../img/Limpias")
-        if np.random.choice([True, False], p=[0.5, 0.5])
+        if np.random.choice([True, False], p=[0.2, 0.8])
     ]
 
     for path in paths:
@@ -124,10 +124,10 @@ def compute_error(params):
 def compute_hough_circles_params():
     param_set = [
         {
-            "param1": int(np.random.rand() * 200) + 1,
-            "param2": int(np.random.rand() * 70) + 1,
+            "param1": int(np.random.rand() * 150) + 50,
+            "param2": int(np.random.rand() * 60) + 1,
         }
-        for _ in range(104)
+        for _ in range(1000)
     ]
     with multiprocessing.Pool(processes=8) as pool:
         errors = pool.map(compute_error, param_set)
