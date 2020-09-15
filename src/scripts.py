@@ -8,12 +8,8 @@ import numpy as np
 from PIL import Image
 from sklearn.model_selection import train_test_split
 
-from img_preprocessing import (
-    dirt_img,
-    get_center_circle,
-    mask_circle,
-    mask_circle_and_wrap_polar,
-)
+from img_preprocessing import (dirt_img, get_center_circle, mask_circle,
+                               mask_circle_and_wrap_polar)
 
 
 def _aux_generate_sets(filenames, train_size, dev_size):
@@ -100,7 +96,7 @@ def compute_error(params):
     paths = [
         f"../img/Limpias/{path}"
         for path in os.listdir("../img/Limpias")
-        if np.random.choice([True, False], p=[0.2, 0.8])
+        if np.random.choice([True, False], p=[0.05, 0.95])
     ]
 
     for path in paths:
@@ -125,7 +121,7 @@ def compute_hough_circles_params():
     param_set = [
         {
             "param1": int(np.random.rand() * 150) + 50,
-            "param2": int(np.random.rand() * 60) + 1,
+            "param2": int(np.random.rand() * 100) + 1,
         }
         for _ in range(1000)
     ]

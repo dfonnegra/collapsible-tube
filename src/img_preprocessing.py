@@ -110,12 +110,12 @@ def get_center_circle(img, **hough_params):
     cvt_img = cv2.GaussianBlur(
         cvt_img, (kernel_size, kernel_size), sigmaX=sigma, sigmaY=sigma
     )
-    if hough_params.get("invert", True):
+    if hough_params.get("invert", False):
         cvt_img = 255 - cvt_img
     hough_params.setdefault("param1", settings.PARAM1_HOUGH)
     hough_params.setdefault("param2", settings.PARAM2_HOUGH)
     circles = cv2.HoughCircles(
-        cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=52, maxRadius=60, **hough_params
+        cvt_img, cv2.HOUGH_GRADIENT, 1, 10, minRadius=54, maxRadius=65, **hough_params
     )
     # cv2.circle(
     #     img, (circles[0, 0, 0], circles[0, 0, 1]), circles[0, 0, 2], (0, 0, 255), 5
