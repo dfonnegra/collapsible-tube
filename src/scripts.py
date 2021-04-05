@@ -8,8 +8,7 @@ import numpy as np
 from PIL import Image
 from sklearn.model_selection import train_test_split
 
-from img_preprocessing import (dirt_img, get_center_circle, mask_circle,
-                               mask_circle_and_wrap_polar)
+from img_preprocessing import dirt_img, get_center_circle, mask_circle
 
 
 def _aux_generate_sets(filenames, train_size, dev_size):
@@ -133,7 +132,7 @@ def compute_hough_circles_params():
 
 
 if __name__ == "__main__":
-    generate_train_dev_test_sets(with_preprocess=True)
-    # compute_hough_circles_params()
+    # generate_train_dev_test_sets(with_preprocess=True)
+    compute_hough_circles_params()
     # compute_dataset_stats()
     # generate_train_dev_test_dirt_images()
